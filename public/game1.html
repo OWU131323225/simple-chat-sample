@@ -45,6 +45,13 @@
 
       let targetX;
       let targetY;
+
+      let img;
+
+      functionpreload() {
+        img = loadImage('キャプチャ.png')
+      }
+
       function setup() {
         createCanvas(500, 500);
         background(200);
@@ -61,7 +68,8 @@
         x += g*0.02;
         y += b*0.02;
         if ( dist(x,y, targetX, targetY) < 10 ) background(0);  // (dist(x,y, targetX, targetY) < 10)
-        circle(x, y, 50);
+        //circle(x, y, 50);
+        image(x, y, 50, 50);
       }
 
     </script>
