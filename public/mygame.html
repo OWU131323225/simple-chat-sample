@@ -46,14 +46,29 @@
 
       let x = 0;
       let y = 0;
-      let r = 40;
+      let r = 100;
       let speed = 0.1;
+      
+      // パンケーキのフリップ（ひっくり返し）関連の変数
+      let isFlipping = false; // ひっくり返っている最中か
+      let flipVelocity = 0;   // 垂直方向の速度
+      let pancakeZ = 0;       // パンケーキの高さ
+      let flipRotation = 0;   // ひっくり返るときの回転角度
+      let flipCount = 0;      // ひっくり返した回数
       let cat;
 
       function setup() {
         createCanvas(800, 800, WEBGL);
         camera(0, 800, 100, 0, 0, 0, 0, 1, 0);
         noStroke();
+      }
+      
+      function keyPressed() {
+        // デバッグ用にスペースキーでもフリップできるようにする
+        if (key === ' ' && !isFlipping) {
+          isFlipping = true;
+          flipVelocity = 15; // 飛び上がる初速
+        }
       }
 
       function draw() {
@@ -63,13 +78,53 @@
         directionalLight(100, 20, 20, -1, -1, -1);
         pointLight(20, 20, 100, 0, 0, 800);
 
-        // 板の動き
+        // フライパンの動き
         push();
         rotateX((-PI * b) / 180);
         rotateY((PI * g) / 180);
         translate(0, 0, -50);
-        box(800, 800, 30);
+
+        // フライパン本体（円柱）
+        push();
+        specularMaterial(100); // フライパンの色
+        rotateX(PI / 2); // X軸で90度回転させて平らにする
+        cylinder(300, 30); // 半径300, 高さ30
         pop();
+
+        // フライパンの取っ手（直方体）
+        push();
+        specularMaterial(50); // 取っ手の色
+        translate(0, 450, 0); // 位置を手前側に調整
+        box(80, 300, 40); // 幅80, 長さ300, 厚み40
+        pop();
+
+        pop();
+
+        // フライパンの傾きが一定以上になったらフリップ開始
+        if (b < -40 && !isFlipping) {
+          isFlipping = true;
+          flipVelocity = 15; // 飛び上がる初速
+        }
+
+        if (isFlipping) {
+          // ひっくり返っている最中の処理
+          pancakeZ += flipVelocity; // 高さを更新
+          flipVelocity -= 0.5; // 重力で速度を減らす
+          flipRotation += 0.2; // 回転させる
+
+          if (pancakeZ < 0) {
+            // 地面（フライパンの面）に着地したら
+            isFlipping = false;
+            pancakeZ = 0;
+            
+            // 180度(PI)の倍数で回転が終わっていたら成功
+            const rotationThreshold = 0.5; // 許容誤差
+            if (abs(flipRotation % PI) < rotationThreshold) {
+              flipCount++;
+            }
+            flipRotation = 0; // 回転をリセット
+          }
+        }
 
         // ボールの動き
         push();
@@ -77,16 +132,20 @@
         y = y + speed * b;
 
         // ボールの高さを板の傾きに合わせて高さを変える
-        translate(x, y, -x * sin((PI * g) / 180) - y * sin((PI * b) / 180));
-        //translate(x, y, 0); // 高さを変えない場合
+        let panTiltZ = -x * sin((PI * g) / 180) - y * sin((PI * b) / 180);
+        translate(x, y, panTiltZ + pancakeZ); // フライパンの傾きに高さを加える
 
         specularMaterial(200); // パンケーキの色や質感
         rotateX(PI / 2); // X軸周りに90度回転して平らにする
+        rotateX(flipRotation); // パンケーキをひっくり返すための回転
         cylinder(r, 5); // 半径r、厚み5の円柱（パンケーキ）を描画
-        if (x > width / 2) x = width / 2;
-        if (y > width / 2) y = width / 2;
-        if (x < -width / 2) x = -width / 2;
-        if (y < -width / 2) y = -width / 2;
+        pop();
+        
+        // 回数を表示
+        push();
+        fill(255);
+        textSize(40);
+        text(`Flip Count: ${flipCount}`, -width / 2 + 50, -height / 2 + 50);
         pop();
       }                                                                                                                                                                                               
     </script>
